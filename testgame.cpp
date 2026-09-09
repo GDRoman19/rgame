@@ -10,7 +10,7 @@ int main() {
         BeginDrawing();
         
         ClearBackground(RAYWHITE);
-
+        
         EndDrawing();
     }
     
