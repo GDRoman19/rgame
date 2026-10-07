@@ -266,11 +266,11 @@ int main() {
             }
             TIMEPAUSE --;
             DrawRectangle(0,0,DISPLAY.x,DISPLAY.y,{0,0,0,100});
-            if (!ply.IsHovered()){DrawRectangleButText(ply,"resume",20,DARKBLUE,BLACK);}
-            if (ply.IsHovered()){DrawRectangleButText(ply,"resume",20,BLUE,{10,10,10,255});}
+            if (!ply.IsHovered()){DrawRectangleRoundedButText(ply,0.7,1,"resume",20,DARKBLUE,BLACK);}
+            if (ply.IsHovered()){DrawRectangleRoundedButText(ply,0.7,1,"resume",20,BLUE,{10,10,10,255});}
 
-            if (!ext.IsHovered()){DrawRectangleButText(ext,"quit",20,DARKBLUE,BLACK);}
-            if (ext.IsHovered()){DrawRectangleButText(ext,"quit",20,BLUE,{10,10,10,255});}
+            if (!ext.IsHovered()){DrawRectangleRoundedButText(ext,0.7,1,"quit",20,DARKBLUE,BLACK);}
+            if (ext.IsHovered()){DrawRectangleRoundedButText(ext,0.7,1,"quit",20,BLUE,{10,10,10,255});}
             
             if (ply.IsPressed()){
                 state = State::PLAY;

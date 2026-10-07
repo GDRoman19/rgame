@@ -40,21 +40,21 @@ bool RectangleButton::IsPressed(){
 void DrawRectangleBut(RectangleButton button, Color color) {
     DrawRectangleRec(button.button,color);
 }
+void DrawRectangleRoundedBut(RectangleButton button, float roundness,int segments, Color color) {
+    DrawRectangleRounded(button.button,roundness,segments,color);
+}
+
 void DrawRectangleButText(RectangleButton button, const char* text, int fontsize, Color color, Color textcolor) {
     DrawRectangleRec(button.button,color);
     int textw = MeasureText(text,fontsize);
     DrawText(text,(button.button.width/2+button.button.x)-textw/2, 
             (button.button.height/2+button.button.y)-fontsize/2,fontsize,textcolor);
 }
-
-RectangleRound::RectangleRound(int xs, int ys, int ws, int hs, float rs){
-    x = xs;
-    y = ys;
-    width = ws;
-    height = hs;
-    radius = rs;
+void DrawRectangleRoundedButText(RectangleButton button, float roundness, int segments, const char* text, int fontsize, Color color, Color textcolor) {
+    DrawRectangleRounded(button.button,roundness,segments,color);
+    int textw = MeasureText(text,fontsize);
+    DrawText(text,(button.button.width/2+button.button.x)-textw/2, 
+            (button.button.height/2+button.button.y)-fontsize/2,fontsize,textcolor);
 }
 
-Rectangle GetRect(RectangleRound rect){
-    return Rectangle{static_cast<float>(rect.x),static_cast<float>(rect.x),static_cast<float>(rect.width),static_cast<float>(rect.height)};
-}
+

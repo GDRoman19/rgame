@@ -13,20 +13,8 @@ struct RectangleButton{
 };
 
 void DrawRectangleBut(RectangleButton,Color);
+void DrawRectangleRoundedBut(RectangleButton,float,int,Color);
+
 void DrawRectangleButText(RectangleButton,const char*,int,Color,Color);
+void DrawRectangleRoundedButText(RectangleButton,float,int,const char*,int,Color,Color);
 
-struct RectangleRound{
-    int x;
-    int y;
-    int width;
-    int height;
-    float radius;
-
-    RectangleRound(int, int, int, int, float);
-};
-
-Rectangle GetRect(RectangleRound);
-/*
-void DrawRectangleRound(int, int, int, int, float, Color);
-void DrawRectangleRoundRec(RectangleRound, Color);
-*/
