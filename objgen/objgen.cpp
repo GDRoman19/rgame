@@ -17,7 +17,8 @@ enum class BulletType{
     DEFAULT,
     SPEED,
     DAMAGE,
-    COOL
+    COOL,
+    HOMING
 };
 enum class BlockType{
     DEFAULT,
@@ -28,7 +29,7 @@ enum class BlockType{
 Font dark;
 BulletType type = BulletType::DEFAULT;
 
-vector<int> ammo = {-1,20,6,16,0,0,0,0};
+vector<int> ammo = {-1,20,6,16,21,0,0,0};
 
 bool CanShoot(){
     if(ammo[static_cast<int>(type)]!=0){
@@ -66,12 +67,14 @@ struct Block{
     Rectangle GetRect(){
         return Rectangle{pos.x,pos.y,dim.x,dim.y};
     }
+    virtual Vector2 GetVel(){
+        return {0,vely};
+    }
     void Hit(float damage){
         health -= damage;
         if(health <= 0){
             dead = true;
             destroycounter += maxhealth;
-            cout << destroycounter;
         }
     }
 protected:
@@ -107,6 +110,9 @@ struct ZBlock:public Block{
             accx = -accx;
             time = maxtime *2;
         }
+    }
+    Vector2 GetVel() override{
+        return {velx,vely};
     }
 private:
     unsigned char time;
@@ -175,7 +181,7 @@ void CreateBlock(){
 
 void DrawLevelText(){
     if(opacitytimer > 2){
-        DrawTextEx(dark,"-Level up-",{450.0F-MeasureText("-Level up-",fsizeleveltext)/2 , 450-fsizeleveltext/2} ,fsizeleveltext,2,{40,40,200,opacitytimer});
+        DrawTextEx(dark,":Level up:",{450.0F-MeasureText(":Level up:",fsizeleveltext)/2 , 450-fsizeleveltext/2} ,fsizeleveltext,2,{40,40,200,opacitytimer});
         opacitytimer -= 2;
     }
 }
@@ -207,7 +213,7 @@ void DrawProgressBar(){
     DrawRectangle(100+1,5+60+5+20+5+1,(66*8-2)*destroycounter/GetPointsReq(),6-2,RED);
 }
 
-void DrawSelectBlock(){
+Block* SelectBlock(){
     Block* winner = nullptr;
     float windistance = 200.0F;
     Vector2 temppos;
@@ -220,9 +226,10 @@ void DrawSelectBlock(){
         }
     }
     if(!winner){
-            return;
+            return nullptr;
     }
     DrawRectangleLinesEx(winner->GetRect(),3,RED);
+    return winner;
 }
 
 void DrawInventory(){
@@ -276,7 +283,7 @@ struct Player{
         pos.x = GetMouseX()-dim.x/2;
     }
     Vector2 GetPos(){
-        return {pos.x+(dim.x/2-5),pos.y-10};
+        return {pos.x+(dim.x/2),pos.y-10};
     }
 private:
     Vector2 pos;
@@ -284,11 +291,14 @@ private:
 };
 
 struct Bullet{
-    Bullet(Vector2 p,Vector2 d,float a,float s,int o, Color c):pos(p),dim(d),damage(a),speed(s),cooldown(o),color(c){dead=false;}
+    Bullet(Vector2 p,Vector2 d,float a,float s,int o, Color c):pos(p),dim(d),damage(a),speed(s),cooldown(o),color(c){
+        dead=false;
+        pos.x -= dim.x/2;
+    }
     void render() const{
         DrawRectangle(pos.x,pos.y,dim.x,dim.y,color);
     }
-    void update() {
+    virtual void update() {
         pos.y -= speed;
         for(Block* block: blocks){
             if(CheckCollisionRecs({pos.x,pos.y,dim.x,dim.y},block->GetRect())){
@@ -320,10 +330,35 @@ struct SBullet:public Bullet{
     explicit SBullet(Vector2 p):Bullet(p,{8,12},1,6,29,{129,150,23,255}){}
 };
 struct ABullet:public Bullet{ 
-    explicit ABullet(Vector2 p):Bullet(p,{8,12},1.4,4,44,{150,31,161,255}){}
+    explicit ABullet(Vector2 p):Bullet(p,{8,12},2,4,44,{150,31,161,255}){}
 };
 struct CBullet:public Bullet{ 
     explicit CBullet(Vector2 p):Bullet(p,{8,12},1,1,19,{82,209,192,255}){}
+};
+struct HBullet:public Bullet{ 
+    explicit HBullet(Vector2 p, Block* t):Bullet(p,{12,18},5,2,241,{49,128,189,255}),target(t),accx(0),velx(0){}
+    void SetTarget(Block* b){
+        target = b;
+    }
+    void update()override{
+        Bullet::update();
+        velx += accx;
+        pos.x += velx;
+        if(target){
+            float time = ((-target->GetRect().y - (target->GetRect().height / 2)) + pos.y) / (target->GetVel().y - speed);
+            cout << time << '\n';
+            float pvelx = (-target->GetRect().x - (target->GetRect().width / 2) + pos.x + (dim.x / 2) - time * target->GetVel().x) / -time;
+            if(velx < pvelx){ 
+                accx = 1.3;
+            } else if(velx > pvelx){
+                accx = -1.3;
+            }
+        }
+    }
+private:
+    Block* target;
+    float accx;
+    float velx;
 };
 
 vector<Bullet*> bullets;
@@ -342,6 +377,9 @@ void CreateBullet(Player p){
     if(type == BulletType::COOL){
         b = new CBullet(p.GetPos());
     }
+    if(type == BulletType::HOMING){
+        b = new HBullet(p.GetPos(),SelectBlock());
+    }
     bullets.push_back(b);
     cooltimer = b->GetCool();
     
@@ -351,7 +389,7 @@ int main(){
     InitWindow(900,900,"BlockBuster");
     SetTargetFPS(60);
 
-    dark = LoadFontEx("./dark.ttf",72,nullptr,0);
+    dark = LoadFontEx("./block.ttf",72,nullptr,0);
     
     Player p;
     short int timeblock = rand()%122+99;
@@ -399,8 +437,8 @@ int main(){
         if(IsKeyDown(KEY_X)){
             DrawInventory();
         }
-        if(IsKeyDown(KEY_Z)){
-            DrawSelectBlock();
+        if(IsKeyDown(type == BulletType::HOMING)){
+            SelectBlock();
         }
         EndDrawing();
         for(auto it = blocks.begin(); it != blocks.end();){
@@ -432,6 +470,9 @@ int main(){
             }
         if(IsKeyPressed(KEY_FOUR)){
                 type = BulletType::COOL;
+            }
+        if(IsKeyPressed(KEY_FIVE)){
+                type = BulletType::HOMING;
             }
     }
     for(Block* block: blocks){
