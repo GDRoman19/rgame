@@ -7,8 +7,8 @@
 #include<cstdio>
 using namespace std;
 
-char level = 0;
-unsigned short int destroycounter = 28;
+char level = 2;
+unsigned short int destroycounter = 0;
 unsigned char cooltimer = 0;
 unsigned char opacitytimer = 0;
 const int fsizeleveltext = 70;
@@ -23,7 +23,9 @@ enum class BulletType{
 enum class BlockType{
     DEFAULT,
     SMALL,
-    ZIGZAG
+    ZIGZAG,
+    BIG,
+    GLIDE
 };
 
 Font dark;
@@ -120,6 +122,23 @@ private:
     float velx;
     unsigned char maxtime;
 };
+struct BBlock:public Block{
+    BBlock():Block({100,100},{224, 38, 184, 255},1,4){}
+};
+struct UBlock:public Block{
+    UBlock():Block({40,40},{0, 255, 170, 255},2,2),velx(rand() %4 + 2){
+    }
+    void update() override{
+        Block::update();
+        pos.x += velx;
+        if(pos.x + dim.x > 900 || pos.x < 0){
+            velx = -velx;
+        }
+    }
+private:
+    float velx;
+};
+
 
 vector<Block*> blocks;
 
@@ -156,6 +175,12 @@ void Create(BlockType b){
         case BlockType::ZIGZAG:
             block = new ZBlock;
             break;
+        case BlockType::BIG:
+            block = new BBlock;
+            break;
+        case BlockType::GLIDE:
+            block = new UBlock;
+            break;
         default:
             block = new DBlock;
             break;
@@ -171,7 +196,11 @@ void CreateBlock(){
         Create(static_cast<BlockType>(random));
         break;
     case 1:
-        random = GetChance({40,30,20,10});
+        random = GetChance({40,30,20});
+        Create(static_cast<BlockType>(random));
+        break;
+    case 2:
+        random = GetChance({30,20,23,14,13});
         Create(static_cast<BlockType>(random));
         break;
     default:
